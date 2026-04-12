@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Kelola Organisasi Pro - Remasta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hidden { display: none; }
+        .active-tab { border-bottom: 4px solid #F1C40F; color: #F1C40F; }
+        
+        :root {
+            --remasta-navy: #1D3557;
+            --remasta-gold: #F1C40F;
+        }
+
+        body {
+            background-image: url('https://images.unsplash.com/photo-1590072221379-3015694a4c51?q=80&w=2000&auto=format&fit=crop'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: #1D3557;
+            font-family: sans-serif;
+        }
+
+        main {
+            background-color: rgba(248, 249, 250, 0.93); 
+            border-radius: 40px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        #org-logo { 
+            object-fit: contain; 
+            width: 100%; height: 100%; 
+            max-width: 45px; max-height: 45px; 
+        }
+
+        .member-photo-frame {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid #F1C40F;
+            margin: 0 auto;
+            background-color: #1D3557;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+        .member-photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="bg-white/95 backdrop-blur-sm shadow-md sticky top-0 z-30 border-b-4 border-[#F1C40F]">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div id="logo-container" class="w-12 h-12 bg-[#1D3557] rounded-full overflow-hidden flex items-center justify-center border-2 border-[#F1C40F] flex-shrink-0">
+                    <img id="org-logo" src="logo-remasta.jpg" alt="Logo" onerror="this.src='https://via.placeholder.com/45?text=R'">
+                </div>
+                <div>
+                    <h1 id="org-name-display" class="text-xl font-black text-[#1D3557] tracking-tighter uppercase leading-none italic">REMASTA</h1>
+                    <p class="text-[9px] text-[#F1C40F] font-black uppercase tracking-widest mt-0.5">AL FATTAH BANARAN 3</p>
+                    <div class="flex gap-2">
+                        <button onclick="changeLogoPrompt()" class="admin-only hidden text-[10px] text-blue-500 hover:underline">Ganti Logo</button>
+                        <button onclick="changeOrgName()" class="admin-only hidden text-[10px] text-blue-500 hover:underline">Edit Nama</button>
+                    </div>
+                    <input type="file" id="logoInput" class="hidden" accept="image/*" onchange="processLogo(this)">
+                </div>
+            </div>
+            <button id="adminBtn" onclick="toggleAdmin()" class="bg-gray-100 px-4 py-1 rounded-full text-[10px] font-black hover:bg-gray-200 transition text-gray-600 uppercase tracking-tighter">
+                Mode: Anggota
+            </button>
+        </div>
+        <nav class="flex justify-center space-x-6 bg-white text-[10px] uppercase tracking-[0.2em] font-black">
+            <button onclick="showPage('home')" id="tab-home" class="py-4 px-2 active-tab">Beranda</button>
+            <button onclick="showPage('members')" id="tab-members" class="py-4 px-2">Anggota</button>
+            <button onclick="showPage('finance')" id="tab-finance" class="py-4 px-2">Kas</button>
+            <button onclick="showPage('news')" id="tab-news" class="py-4 px-2">Pengumuman</button>
+        </nav>
+    </header>
+
+    <main class="max-w-5xl mx-auto mt-6 mb-10">
+        
+        <section id="page-home" class="space-y-8">
+            <div class="bg-[#1D3557] text-white p-10 rounded-[35px] shadow-2xl relative overflow-hidden border-r-[12px] border-[#F1C40F]">
+                <div class="relative z-10">
+                    <p class="text-[#F1C40F] font-black text-xs uppercase tracking-[0.3em] mb-1">Ahlan Wa Sahlan</p>
+                    <h2 class="text-4xl font-black italic tracking-tighter text-white">DASHBOARD</h2>
+                    <p class="mt-2 opacity-80 text-[10px] font-bold tracking-[0.2em] uppercase text-white/90 border-t border-white/20 pt-2 inline-block">PUSAT INFORMASI DAN MANAJEMEN REMAJA MASJID AL FATTAH (REMASTA)</p>
+                </div>
+                <div class="absolute right-[-20px] top-[-20px] opacity-10 text-[120px] font-serif italic">R</div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="bg-white/80 backdrop-blur-sm p-8 rounded-[25px] shadow border border-gray-100 flex flex-col justify-center">
+                    <p class="text-gray-400 text-[9px] font-black uppercase tracking-widest mb-1">Saldo Kas Organisasi</p>
+                    <p id="stat-balance" class="text-3xl font-black text-green-700">Rp 0</p>
+                </div>
+                <div class="bg-white/80 backdrop-blur-sm p-8 rounded-[25px] shadow border border-gray-100 flex flex-col justify-center border-l-4 border-[#F1C40F]">
+                    <p class="text-gray-400 text-[9px] font-black uppercase tracking-widest mb-1">Total Tunggakan</p>
+                    <p id="stat-receivable" class="text-3xl font-black text-[#F1C40F]">Rp 0</p>
+                </div>
+                <div class="bg-white/80 backdrop-blur-sm p-8 rounded-[25px] shadow border border-gray-100 flex flex-col justify-center">
+                    <p class="text-gray-400 text-[9px] font-black uppercase tracking-widest mb-1">Anggota Aktif</p>
+                    <p id="stat-members" class="text-3xl font-black text-[#1D3557]">0</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-members" class="hidden space-y-5">
+            <div class="flex justify-between items-center px-2">
+                <h2 class="text-2xl font-black text-gray-800 italic uppercase tracking-tighter">Daftar Anggota</h2>
+                <button onclick="addMemberPrompt()" class="admin-only hidden bg-[#1D3557] text-white px-6 py-2.5 rounded-full text-xs font-black shadow-lg hover:scale-105 transition">+ TAMBAH</button>
+            </div>
+            <div class="bg-white/80 backdrop-blur-sm rounded-[30px] shadow border border-gray-100 overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-100/70 text-left">
+                        <tr>
+                            <th class="px-6 py-4 text-[9px] font-black text-gray-500 uppercase tracking-widest w-1/3">Nama / Jabatan</th>
+                            <th class="px-6 py-4 text-[9px] font-black text-gray-500 uppercase tracking-widest text-center whitespace-nowrap">Status Pembayaran</th>
+                            <th class="px-6 py-4 text-[9px] font-black text-gray-500 uppercase tracking-widest text-right">Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memberTableBody" class="bg-white/50 divide-y divide-gray-100 text-sm font-medium tracking-tight"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="page-profile" class="hidden space-y-4">
+            <button onclick="showPage('members')" class="text-[#1D3557] text-[11px] font-black uppercase tracking-widest p-2 hover:text-[#F1C40F] transition">← Kembali Ke Daftar</button>
+            <div id="profile-content" class="bg-white/95 backdrop-blur-sm rounded-[45px] shadow-2xl border border-gray-200 p-12 text-center space-y-7 relative"></div>
+            <input type="file" id="memberPhotoInput" class="hidden" accept="image/*" onchange="processMemberPhoto(this)">
+        </section>
+
+        <section id="page-finance" class="hidden space-y-6">
+            <div class="flex justify-between items-center px-2">
+                <h2 class="text-2xl font-black text-gray-800 italic uppercase">Keuangan</h2>
+                <button onclick="chargeAllMembers()" class="admin-only hidden bg-[#F1C40F] text-[#1D3557] px-6 py-2.5 rounded-full text-xs font-black shadow-lg hover:scale-105 transition">⚡ TAGIH SEMUA KAS</button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-5">
+                <div class="bg-white/90 backdrop-blur-sm p-10 rounded-[35px] shadow border border-gray-100 space-y-4">
+                    <p class="text-[11px] text-gray-400 uppercase tracking-widest font-black">Saldo Kas Saat Ini</p>
+                    <p id="finance-balance" class="text-5xl font-black text-[#1D3557] tracking-tighter">Rp 0</p>
+                    <div class="admin-only hidden flex gap-3 pt-6 border-t border-gray-100">
+                        <button onclick="updateBalance('in')" class="bg-green-600 text-white px-4 py-3.5 rounded-2xl text-[10px] font-black w-1/2 shadow-lg">UANG MASUK</button>
+                        <button onclick="updateBalance('out')" class="bg-red-600 text-white px-4 py-3.5 rounded-2xl text-[10px] font-black w-1/2 shadow-lg">PENGELUARAN</button>
+                    </div>
+                </div>
+                <div class="bg-[#1D3557] text-white p-10 rounded-[35px] shadow-sm border-l-[12px] border-[#F1C40F] flex flex-col justify-center shadow-inner">
+                    <p class="text-[11px] text-gray-400 uppercase tracking-widest font-bold mb-1">Total Biaya Keluar</p>
+                    <p id="finance-total-out" class="text-3xl font-black text-[#F1C40F]">Rp 0</p>
+                </div>
+            </div>
+            <div class="bg-white/80 backdrop-blur-sm rounded-[30px] shadow border border-gray-200 overflow-hidden">
+                <div class="p-5 border-b flex justify-between items-center bg-gray-50/50">
+                    <h3 class="font-black text-[9px] uppercase tracking-widest text-gray-400">Log Transaksi Kas</h3>
+                    <button onclick="clearHistory()" class="admin-only hidden text-[9px] text-red-500 font-black">RESET LOG</button>
+                </div>
+                <ul id="historyList" class="divide-y divide-gray-100 text-sm"></ul>
+            </div>
+        </section>
+
+        <section id="page-news" class="hidden space-y-4">
+            <div class="flex justify-between items-center px-2">
+                <h2 class="text-2xl font-black text-gray-800 italic uppercase tracking-tighter">Pengumuman</h2>
+                <button onclick="addNewsPrompt()" class="admin-only hidden bg-[#1D3557] text-white px-6 py-2.5 rounded-full text-xs font-black shadow-lg hover:scale-105 transition">+ BARU</button>
+            </div>
+            <div id="newsList" class="grid gap-6 pt-2"></div>
+        </section>
+
+    </main>
+
+    <script>
+        const ADMIN_CODE = "AFRB3"; 
+        let isAdmin = false;
+        let currentViewingMemberId = null;
+
+        let data = JSON.parse(localStorage.getItem('orgDataV11')) || {
+            orgName: "REMASTA",
+            logo: null,
+            members: [],
+            balance: 0,
+            totalExpense: 0,
+            history: [],
+            announcements: []
+        };
+
+        function save() {
+            localStorage.setItem('orgDataV11', JSON.stringify(data));
+            render();
+        }
+
+        function toggleAdmin() {
+            if (!isAdmin) {
+                let code = prompt("Masukkan PIN Admin:");
+                if (code === ADMIN_CODE) {
+                    isAdmin = true;
+                    document.getElementById('adminBtn').innerText = "MODE: ADMIN";
+                    document.getElementById('adminBtn').className = "bg-red-600 px-4 py-1 rounded-full text-[10px] font-black text-white shadow-lg uppercase tracking-tight";
+                } else { alert("PIN Salah!"); }
+            } else {
+                isAdmin = false;
+                document.getElementById('adminBtn').innerText = "MODE: ANGGOTA";
+                document.getElementById('adminBtn').className = "bg-gray-100 px-4 py-1 rounded-full text-[10px] font-black text-gray-600 shadow uppercase tracking-tight";
+            }
+            updateAdminUI();
+            if(currentViewingMemberId) viewProfile(currentViewingMemberId);
+        }
+
+        function updateAdminUI() {
+            document.querySelectorAll('.admin-only').forEach(el => {
+                isAdmin ? el.classList.remove('hidden') : el.classList.add('hidden');
+            });
+            render();
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('main section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('page-' + pageId).classList.remove('hidden');
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab'));
+            const activeBtn = document.getElementById('tab-' + pageId);
+            if (activeBtn) activeBtn.classList.add('active-tab');
+        }
+
+        function changeMemberPhotoPrompt(id) {
+            currentViewingMemberId = id;
+            document.getElementById('memberPhotoInput').click();
+        }
+
+        function processMemberPhoto(input) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = (e) => {
+                    const idx = data.members.findIndex(m => m.id === currentViewingMemberId);
+                    if(idx !== -1) {
+                        data.members[idx].photo = e.target.result;
+                        save();
+                        viewProfile(currentViewingMemberId);
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function confirmPayment(id) {
+            const idx = data.members.findIndex(m => m.id === id);
+            let debtNow = data.members[idx].debt;
+            
+            if (debtNow <= 0) {
+                alert("Anggota ini sudah Lunas!");
+                return;
+            }
+
+            let inputAmount = prompt(`Tunggakan ${data.members[idx].name}: Rp ${debtNow.toLocaleString('id-ID')}\nMasukkan jumlah yang dibayar:`, debtNow);
+            let amountPaid = parseInt(inputAmount);
+
+            if (isNaN(amountPaid) || amountPaid <= 0) {
+                alert("Nominal tidak valid!");
+                return;
+            }
+
+            if (amountPaid > debtNow) {
+                alert("Nominal melebihi jumlah tunggakan!");
+                return;
+            }
+
+            let isLunas = amountPaid === debtNow;
+            let confirmMsg = isLunas 
+                ? `Konfirmasi pembayaran LUNAS sebesar Rp ${amountPaid.toLocaleString('id-ID')}?`
+                : `Konfirmasi pembayaran cicilan sebesar Rp ${amountPaid.toLocaleString('id-ID')}?\nSisa tunggakan berikutnya: Rp ${(debtNow - amountPaid).toLocaleString('id-ID')}`;
+
+            if (confirm(confirmMsg)) {
+                data.balance += amountPaid;
+                data.history.unshift({ 
+                    type: 'in', 
+                    note: `Bayar Kas ${isLunas ? '(Lunas)' : '(Cicil)'}: ${data.members[idx].name}`, 
+                    amount: amountPaid, 
+                    date: new Date().toLocaleString('id-ID') 
+                });
+                data.members[idx].debt -= amountPaid;
+                save();
+                viewProfile(id);
+            }
+        }
+
+        function viewProfile(id) {
+            currentViewingMemberId = id;
+            const m = data.members.find(item => item.id === id);
+            if(!m) return;
+            const content = document.getElementById('profile-content');
+            const photoDisplay = m.photo ? `<img src="${m.photo}">` : `<span class="text-white text-4xl font-black">${m.name.charAt(0)}</span>`;
+
+            content.innerHTML = `
+                <div class="member-photo-frame">${photoDisplay}</div>
+                <button onclick="changeMemberPhotoPrompt(${m.id})" class="admin-only ${isAdmin ? '' : 'hidden'} bg-white text-[#1D3557] border border-gray-200 px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm mx-auto mt-2 hover:bg-gray-50 transition">GANTI FOTO</button>
+                <div class="mt-4"><h2 class="text-3xl font-black text-[#1D3557] uppercase tracking-tighter">${m.name}</h2><p class="text-[#F1C40F] font-black text-[11px] uppercase tracking-[0.2em]">${m.status}</p></div>
+                <div class="p-6 rounded-[25px] italic text-gray-500 text-sm max-w-md mx-auto bg-white shadow-inner border border-gray-100">"${m.bio}"</div>
+                <div class="pt-2"><p class="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1.5 text-center">Status Keuangan Personal</p><div class="p-8 rounded-[25px] shadow ${m.debt > 0 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-700'} border-4 ${m.debt > 0 ? 'border-red-100' : 'border-green-100'}"><p class="text-4xl font-black tracking-tight">${m.debt > 0 ? 'Rp ' + m.debt.toLocaleString('id-ID') : 'LUNAS ✅'}</p></div></div>
+                <div class="admin-only ${isAdmin ? '' : 'hidden'} flex flex-wrap gap-2.5 justify-center pt-8 border-t border-gray-100 mt-8">
+                    <button onclick="confirmPayment(${m.id})" class="bg-green-600 text-white px-8 py-3.5 rounded-2xl text-[10px] font-black shadow-lg hover:bg-green-700 transition uppercase tracking-widest">✅ SUDAH MEMBAYAR</button>
+                    <button onclick="chargeMember(${m.id})" class="bg-orange-500 text-white px-6 py-3.5 rounded-2xl text-[10px] font-black shadow-lg">TAGIH</button>
+                    <button onclick="editMember(${m.id})" class="bg-gray-100 text-gray-600 px-6 py-3.5 rounded-2xl text-[10px] font-black">EDIT</button>
+                    <button onclick="deleteMember(${m.id})" class="bg-red-50 text-red-500 px-6 py-3.5 rounded-2xl text-[10px] font-black">HAPUS</button>
+                </div>
+            `;
+            showPage('profile');
+        }
+
+        function changeOrgName() {
+            let n = prompt("Ganti Nama Organisasi:", data.orgName);
+            if (n) { data.orgName = n; save(); }
+        }
+        function changeLogoPrompt() { document.getElementById('logoInput').click(); }
+        function processLogo(input) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = (e) => { data.logo = e.target.result; save(); };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function chargeAllMembers() {
+            let amount = parseInt(prompt("Nominal Kas (Rp):"));
+            let label = prompt("Keterangan:", "Kas Rutin");
+            if (!isNaN(amount) && label) {
+                if(confirm(`Tagih Rp ${amount.toLocaleString()} ke semua anggota?`)) {
+                    data.members.forEach(m => { m.debt += amount; });
+                    data.history.unshift({ type: 'info', note: `TAGIHAN: ${label}`, amount: amount * data.members.length, date: new Date().toLocaleString('id-ID') });
+                    save();
+                }
+            }
+        }
+
+        function chargeMember(id) {
+            let amount = parseInt(prompt("Tagihan Khusus (Rp):"));
+            if (!isNaN(amount)) {
+                const idx = data.members.findIndex(m => m.id === id);
+                data.members[idx].debt += amount;
+                save();
+                viewProfile(id);
+            }
+        }
+
+        function addMemberPrompt() {
+            let n = prompt("Nama Lengkap:"); let s = prompt("Jabatan:", "Anggota"); let b = prompt("Bio:");
+            if (n && s) { data.members.push({ id: Date.now(), name: n, status: s, bio: b || "Anggota aktif.", debt: 0, photo: null }); save(); }
+        }
+
+        function updateBalance(type) {
+            let amount = parseInt(prompt("Nominal (Rp):"));
+            let note = prompt("Keterangan:");
+            if (!isNaN(amount) && note) {
+                if (type === 'out' && amount > data.balance) { alert("Saldo tidak cukup!"); return; }
+                if (type === 'in') data.balance += amount;
+                else { data.balance -= amount; data.totalExpense += amount; }
+                data.history.unshift({ type, note, amount, date: new Date().toLocaleString('id-ID') });
+                save();
+            }
+        }
+
+        function editMember(id) {
+            const idx = data.members.findIndex(m => m.id === id);
+            let n = prompt("Nama:", data.members[idx].name);
+            let s = prompt("Jabatan:", data.members[idx].status);
+            let b = prompt("Bio:", data.members[idx].bio);
+            if (n && s) { data.members[idx].name = n; data.members[idx].status = s; data.members[idx].bio = b; save(); viewProfile(id); }
+        }
+
+        function deleteMember(id) { if (confirm("Hapus Anggota?")) { data.members = data.members.filter(m => m.id !== id); save(); showPage('members'); } }
+        function clearHistory() { if(confirm("Hapus Riwayat Kas?")) { data.history = []; data.totalExpense = 0; save(); } }
+        
+        function addNewsPrompt() {
+            let t = prompt("Judul Pengumuman:"); 
+            let c = prompt("Isi Pengumuman:");
+            if (t && c) { 
+                data.announcements.unshift({ 
+                    id: Date.now(),
+                    title: t, 
+                    content: c, 
+                    date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) 
+                }); 
+                save(); 
+            }
+        }
+
+        function deleteNews(id) {
+            if(confirm("Hapus pengumuman ini?")) {
+                data.announcements = data.announcements.filter(a => a.id !== id);
+                save();
+            }
+        }
+
+        function render() {
+            document.getElementById('org-name-display').innerText = data.orgName;
+            if (data.logo) document.getElementById('org-logo').src = data.logo;
+
+            let totalHutang = data.members.reduce((acc, curr) => acc + curr.debt, 0);
+
+            document.getElementById('stat-balance').innerText = `Rp ${data.balance.toLocaleString('id-ID')}`;
+            document.getElementById('stat-receivable').innerText = `Rp ${totalHutang.toLocaleString('id-ID')}`;
+            document.getElementById('stat-members').innerText = data.members.length;
+            document.getElementById('finance-balance').innerText = `Rp ${data.balance.toLocaleString('id-ID')}`;
+            document.getElementById('finance-total-out').innerText = `Rp ${data.totalExpense.toLocaleString('id-ID')}`;
+
+            let mbHtml = "";
+            data.members.forEach((m) => {
+                const statusTag = m.debt > 0 ? 
+                    `<span class="text-red-700 font-black text-[9px] bg-red-100 px-3 py-1.5 rounded-full border border-red-200 shadow-sm">Tunggakan: Rp ${m.debt.toLocaleString('id-ID')}</span>` : 
+                    `<span class="text-green-700 font-black text-[9px] bg-green-100 px-3 py-1.5 rounded-full border border-green-200 shadow-sm">Lunas ✅</span>`;
+
+                mbHtml += `<tr class="hover:bg-gray-100/50 transition">
+                    <td class="px-6 py-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-[#1D3557] overflow-hidden flex items-center justify-center border border-[#F1C40F]">
+                                ${m.photo ? `<img src="${m.photo}" class="w-full h-full object-cover">` : `<span class="text-white text-[10px] font-black">${m.name.charAt(0)}</span>`}
+                            </div>
+                            <div>
+                                <p class="font-black text-[#1D3557] text-sm uppercase tracking-tight">${m.name}</p>
+                                <p class="text-[9px] text-gray-400 font-bold tracking-widest uppercase">${m.status}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-5 text-center whitespace-nowrap">${statusTag}</td>
+                    <td class="px-6 py-5 text-right whitespace-nowrap">
+                        <button onclick="viewProfile(${m.id})" class="text-blue-600 font-black text-[10px] bg-blue-100 px-5 py-2.5 rounded-2xl hover:bg-blue-600 hover:text-white transition">PROFIL</button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('memberTableBody').innerHTML = mbHtml || '<tr><td colspan="3" class="p-12 text-center text-gray-400 font-black italic">BELUM ADA DATA ANGGOTA</td></tr>';
+
+            let hsHtml = "";
+            data.history.forEach(h => {
+                const colors = { in: 'text-green-600', out: 'text-red-600', info: 'text-blue-600' };
+                hsHtml += `<li class="p-5 flex justify-between items-center hover:bg-gray-100 transition border-l-4 ${h.type === 'in' ? 'border-green-300' : 'border-red-300'} ml-3 mb-1.5 rounded-r-xl">
+                    <div><p class="font-black text-[#1D3557] text-[10px] uppercase">${h.note}</p><p class="text-[9px] text-gray-300 font-bold">${h.date}</p></div>
+                    <div class="${colors[h.type]} font-black text-xs whitespace-nowrap">${h.type === 'out' ? '-' : '+'} Rp ${h.amount.toLocaleString('id-ID')}</div>
+                </li>`;
+            });
+            document.getElementById('historyList').innerHTML = hsHtml || '<p class="p-6 text-center text-gray-400 italic">Belum ada transaksi kas</p>';
+
+            let anHtml = "";
+            data.announcements.forEach(a => {
+                anHtml += `
+                <div class="bg-white/95 backdrop-blur-sm p-8 rounded-[35px] shadow-sm border-l-[12px] border-[#1D3557] relative group">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[10px] text-[#F1C40F] font-black uppercase tracking-[0.2em] bg-[#1D3557] px-3 py-1 rounded-full">${a.date}</span>
+                        <button onclick="deleteNews(${a.id})" class="admin-only ${isAdmin ? '' : 'hidden'} text-red-500 hover:text-red-700 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                    <h3 class="font-black text-[#1D3557] uppercase text-lg tracking-tighter leading-none mb-3">${a.title}</h3>
+                    <div class="border-t border-gray-100 pt-3">
+                        <p class="text-sm text-gray-600 leading-relaxed font-medium whitespace-pre-wrap">${a.content}</p>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('newsList').innerHTML = anHtml || '<p class="p-10 text-center text-gray-400 italic font-black uppercase text-[10px] tracking-widest">BELUM ADA PENGUMUMAN TERBARU</p>';
+        }
+
+        render();
+    </script>
+</body>
+</html>
