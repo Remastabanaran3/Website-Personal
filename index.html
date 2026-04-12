@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REMASTA - Sistem Kelola Organisasi</title>
+    <title>REMASTA PRO - Cloud System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script type="module">
@@ -23,10 +23,14 @@
         const db = getDatabase(app);
         const dataRef = ref(db, 'remasta_v11_data');
 
+        // Fungsi Simpan ke Cloud
         window.save = () => {
-            set(dataRef, window.data).catch(err => alert("Gagal menyimpan ke Cloud: " + err));
+            set(dataRef, window.data).then(() => {
+                console.log("Data Berhasil Disinkronisasi");
+            }).catch(err => alert("Gagal Simpan ke Cloud: " + err));
         };
 
+        // Sinkronisasi Data Real-Time
         onValue(dataRef, (snapshot) => {
             const remoteData = snapshot.val();
             if (remoteData) {
@@ -39,6 +43,8 @@
                 };
                 render();
                 if(currentViewingMemberId) viewProfile(currentViewingMemberId);
+            } else {
+                render();
             }
         });
     </script>
@@ -46,154 +52,177 @@
     <style>
         .hidden { display: none; }
         .active-tab { border-bottom: 4px solid #F1C40F; color: #1D3557; font-weight: 900; }
-        :root { --navy: #1D3557; --gold: #F1C40F; }
         body {
-            background: linear-gradient(rgba(29, 53, 87, 0.4), rgba(29, 53, 87, 0.4)), 
-                        url('https://images.unsplash.com/photo-1590072221379-3015694a4c51?q=80&w=2000&auto=format&fit=crop');
+            background: linear-gradient(rgba(29, 53, 87, 0.7), rgba(29, 53, 87, 0.7)), 
+                        url('https://images.unsplash.com/photo-1590072221379-3015694a4c51?q=80&w=2000');
             background-size: cover; background-position: center; background-attachment: fixed;
             min-height: 100vh; font-family: 'Inter', sans-serif;
         }
-        main { background-color: rgba(255, 255, 255, 0.95); border-radius: 2rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-        .member-photo-frame {
-            width: 140px; height: 140px; border-radius: 50%; overflow: hidden;
-            border: 6px solid var(--gold); background: var(--navy);
-            display: flex; align-items: center; justify-content: center; margin: 0 auto;
+        main { background-color: rgba(255, 255, 255, 0.98); border-radius: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #F1C40F; border-radius: 10px; }
+        .card-stat { transition: transform 0.2s; }
+        .card-stat:hover { transform: translateY(-5px); }
+        
+        /* Animasi Transisi */
+        section { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .custom-scroll::-webkit-scrollbar { height: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
     </style>
 </head>
-<body class="p-2 md:p-6">
+<body class="p-2 md:p-6 text-slate-800">
 
-    <header class="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden mb-6 border-b-4 border-[#F1C40F]">
-        <div class="px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+    <header class="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden mb-6 border-b-4 border-[#F1C40F]">
+        <div class="px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="w-14 h-14 bg-[#1D3557] rounded-2xl flex items-center justify-center border-2 border-[#F1C40F] shadow-lg overflow-hidden">
-                    <img id="org-logo" src="logo-remasta.jpg" alt="R" onerror="this.src='https://via.placeholder.com/60?text=R'">
+                <div class="w-16 h-16 bg-[#1D3557] rounded-full flex items-center justify-center border-2 border-[#F1C40F] shadow-lg overflow-hidden">
+                    <img id="org-logo" src="https://via.placeholder.com/80?text=R" class="w-full h-full object-cover">
                 </div>
                 <div>
-                    <h1 id="org-name-display" class="text-2xl font-black text-[#1D3557] tracking-tighter italic leading-none">REMASTA</h1>
-                    <p class="text-[10px] text-[#F1C40F] font-bold tracking-[0.2em] uppercase">Al-Fattah Banaran 3</p>
+                    <h1 id="org-name-display" class="text-2xl font-black text-[#1D3557] tracking-tighter italic uppercase leading-none">REMASTA</h1>
+                    <p class="text-[10px] text-[#F1C40F] font-black tracking-widest uppercase">Al-Fattah Banaran 3</p>
                     <div class="flex gap-3 admin-only hidden mt-1">
-                        <button onclick="changeLogoPrompt()" class="text-[10px] font-bold text-blue-600 uppercase hover:underline">Ganti Logo</button>
-                        <button onclick="changeOrgName()" class="text-[10px] font-bold text-blue-600 uppercase hover:underline">Edit Nama</button>
+                        <button onclick="document.getElementById('logoInput').click()" class="text-[9px] font-bold text-blue-600 uppercase underline">Ganti Logo</button>
+                        <button onclick="changeOrgName()" class="text-[9px] font-bold text-indigo-600 uppercase underline">Ganti Nama</button>
                     </div>
+                    <input type="file" id="logoInput" class="hidden" accept="image/*" onchange="processLogo(this)">
                 </div>
             </div>
-            <button id="adminBtn" onclick="toggleAdmin()" class="bg-slate-100 px-5 py-2 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-200 transition">Mode: Anggota</button>
+            <button id="adminBtn" onclick="toggleAdmin()" class="bg-slate-100 px-5 py-2.5 rounded-2xl text-[10px] font-black text-slate-500 uppercase shadow-inner">Mode: Anggota</button>
         </div>
         
-        <nav class="flex justify-center border-t bg-slate-50 custom-scroll overflow-x-auto">
-            <button onclick="showPage('home')" id="tab-home" class="py-4 px-6 text-[10px] uppercase tracking-widest active-tab">Beranda</button>
-            <button onclick="showPage('members')" id="tab-members" class="py-4 px-6 text-[10px] uppercase tracking-widest">Anggota</button>
-            <button onclick="showPage('finance')" id="tab-finance" class="py-4 px-6 text-[10px] uppercase tracking-widest">Keuangan</button>
-            <button onclick="showPage('news')" id="tab-news" class="py-4 px-6 text-[10px] uppercase tracking-widest">Info</button>
+        <nav class="flex justify-center border-t bg-slate-50 overflow-x-auto custom-scroll">
+            <button onclick="showPage('home')" id="tab-home" class="py-4 px-8 text-[11px] uppercase font-black tracking-widest active-tab whitespace-nowrap">Beranda</button>
+            <button onclick="showPage('members')" id="tab-members" class="py-4 px-8 text-[11px] uppercase font-black tracking-widest whitespace-nowrap">Anggota</button>
+            <button onclick="showPage('finance')" id="tab-finance" class="py-4 px-8 text-[11px] uppercase font-black tracking-widest whitespace-nowrap">Keuangan</button>
+            <button onclick="showPage('news')" id="tab-news" class="py-4 px-8 text-[11px] uppercase font-black tracking-widest whitespace-nowrap">Informasi</button>
         </nav>
     </header>
 
-    <main class="max-w-5xl mx-auto p-6 md:p-10 min-h-[60vh]">
-        <section id="page-home" class="space-y-8 animate-in fade-in duration-500">
-            <div class="bg-[#1D3557] text-white p-8 md:p-12 rounded-[2rem] relative overflow-hidden shadow-2xl">
+    <main class="max-w-5xl mx-auto p-6 md:p-12 min-h-[65vh]">
+        
+        <section id="page-home" class="space-y-8">
+            <div class="bg-[#1D3557] text-white p-10 md:p-16 rounded-[3rem] relative overflow-hidden shadow-2xl">
                 <div class="relative z-10">
-                    <span class="bg-[#F1C40F] text-[#1D3557] px-3 py-1 rounded-lg text-[10px] font-black uppercase mb-4 inline-block">Official Portal</span>
-                    <h2 class="text-4xl md:text-6xl font-black italic tracking-tighter mb-2">DASHBOARD</h2>
-                    <div class="h-1 w-24 bg-[#F1C40F] mb-4"></div>
-                    <p class="opacity-70 text-xs font-medium max-w-md uppercase tracking-wide leading-relaxed">Pusat Manajemen Data & Keuangan Remaja Masjid Al-Fattah</p>
+                    <h3 class="text-[#F1C40F] font-black italic tracking-widest text-sm mb-3 uppercase">Ahlan wa Sahlan</h3>
+                    <h2 class="text-5xl md:text-7xl font-black italic tracking-tighter leading-none uppercase">Selamat <br> Datang</h2>
+                    <p class="opacity-60 text-[11px] uppercase tracking-[0.4em] mt-6 border-t border-white/20 pt-6">Sistem Manajemen Terpadu Remaja Masjid Al-Fattah</p>
                 </div>
-                <div class="absolute right-[-10%] bottom-[-20%] opacity-10 text-[200px] font-black italic select-none">REMASTA</div>
+                <div class="absolute right-[-30px] bottom-[-30px] opacity-10 text-[200px] font-black italic select-none">R</div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white p-8 rounded-3xl border shadow-sm border-l-8 border-green-500">
-                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Saldo Kas</p>
+                <div class="bg-white p-8 rounded-[2.5rem] border-l-8 border-green-500 shadow-md card-stat">
+                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1 tracking-widest">Saldo Kas</p>
                     <p id="stat-balance" class="text-3xl font-black text-[#1D3557]">Rp 0</p>
                 </div>
-                <div class="bg-white p-8 rounded-3xl border shadow-sm border-l-8 border-amber-400">
-                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Tunggakan</p>
+                <div class="bg-white p-8 rounded-[2.5rem] border-l-8 border-amber-400 shadow-md card-stat">
+                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1 tracking-widest">Total Piutang</p>
                     <p id="stat-receivable" class="text-3xl font-black text-amber-500">Rp 0</p>
                 </div>
-                <div class="bg-white p-8 rounded-3xl border shadow-sm border-l-8 border-indigo-500">
-                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Anggota</p>
+                <div class="bg-white p-8 rounded-[2.5rem] border-l-8 border-indigo-500 shadow-md card-stat">
+                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1 tracking-widest">Total Anggota</p>
                     <p id="stat-members" class="text-3xl font-black text-[#1D3557]">0</p>
                 </div>
             </div>
         </section>
 
         <section id="page-members" class="hidden space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-black text-[#1D3557] italic uppercase">Database Anggota</h2>
-                <button onclick="addMemberPrompt()" class="admin-only hidden bg-[#1D3557] text-white px-6 py-3 rounded-2xl text-[10px] font-black shadow-lg hover:bg-black transition">+ ANGGOTA BARU</button>
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl font-black text-[#1D3557] italic uppercase tracking-tighter">Data Anggota</h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Database Keanggotaan Remasta</p>
+                </div>
+                <button onclick="addMemberPrompt()" class="admin-only hidden bg-[#1D3557] text-white px-6 py-3 rounded-2xl text-[11px] font-black shadow-xl hover:bg-navy-700 transition-all uppercase">+ Anggota Baru</button>
             </div>
-            <div class="bg-white rounded-[2rem] border overflow-hidden shadow-sm">
+            
+            <div class="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-xl">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-[10px] uppercase font-black text-slate-400 border-b">
                             <tr>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Profil</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status Kas</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Opsi</th>
+                                <th class="px-8 py-5">Profil Anggota</th>
+                                <th class="px-8 py-5 text-center">Status Tunggakan</th>
+                                <th class="px-8 py-5 text-right">Tindakan</th>
                             </tr>
                         </thead>
-                        <tbody id="memberTableBody" class="divide-y divide-slate-100"></tbody>
+                        <tbody id="memberTableBody" class="divide-y divide-slate-50"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
         <section id="page-profile" class="hidden max-w-2xl mx-auto">
-            <button onclick="showPage('members')" class="mb-6 text-[#1D3557] text-[10px] font-black uppercase flex items-center gap-2 hover:gap-4 transition-all">
-                <span>←</span> Kembali ke Daftar
+            <button onclick="showPage('members')" class="mb-6 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 hover:text-[#1D3557] transition-colors">
+                <span class="text-xl">←</span> Kembali ke Daftar
             </button>
-            <div id="profile-content" class="bg-white rounded-[3rem] shadow-2xl border p-10 text-center relative overflow-hidden">
-                </div>
-            <input type="file" id="memberPhotoInput" class="hidden" accept="image/*" onchange="processMemberPhoto(this)">
+            <div id="profile-content" class="bg-white rounded-[3.5rem] shadow-2xl border border-slate-50 p-10 text-center relative overflow-hidden"></div>
+            <input type="file" id="memberPhotoInput" class="hidden" onchange="processMemberPhoto(this)">
         </section>
 
-        <section id="page-finance" class="hidden space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-black text-[#1D3557] italic uppercase text-indigo-900">Keuangan & Log</h2>
-                <button onclick="chargeAllMembers()" class="admin-only hidden bg-amber-400 text-amber-900 px-6 py-3 rounded-2xl text-[10px] font-black shadow-lg">⚡ TAGIH KAS MASAL</button>
+        <section id="page-finance" class="hidden space-y-8">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl font-black text-[#1D3557] italic uppercase tracking-tighter">Laporan Kas</h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Transparansi Arus Kas Organisasi</p>
+                </div>
+                <button onclick="chargeAllMembers()" class="admin-only hidden bg-amber-400 text-[#1D3557] px-6 py-3 rounded-2xl text-[11px] font-black shadow-lg hover:scale-105 transition-transform uppercase">⚡ Tagih Semua Anggota</button>
             </div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-white p-10 rounded-[2.5rem] border-2 border-slate-100 shadow-sm">
-                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Total Saldo Tersedia</p>
-                    <p id="finance-balance" class="text-5xl font-black text-[#1D3557] tracking-tighter mb-6">Rp 0</p>
-                    <div class="admin-only hidden grid grid-cols-2 gap-4 pt-6 border-t">
-                        <button onclick="updateBalance('in')" class="bg-green-100 text-green-700 p-4 rounded-2xl font-black text-[10px] uppercase hover:bg-green-600 hover:text-white transition">Pemasukan</button>
-                        <button onclick="updateBalance('out')" class="bg-red-100 text-red-700 p-4 rounded-2xl font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition">Pengeluaran</button>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-[#1D3557] p-8 rounded-[2.5rem] text-white shadow-xl">
+                    <p class="text-[10px] font-black opacity-50 uppercase mb-1 tracking-widest">Saldo Bersih</p>
+                    <p id="finance-balance" class="text-3xl font-black text-[#F1C40F]">Rp 0</p>
+                </div>
+                <div class="bg-green-50 p-8 rounded-[2.5rem] border border-green-100 shadow-sm">
+                    <p class="text-green-600 text-[10px] font-black uppercase mb-1 tracking-widest">Total Pemasukan</p>
+                    <p id="finance-income" class="text-3xl font-black text-green-700">Rp 0</p>
+                </div>
+                <div class="bg-red-50 p-8 rounded-[2.5rem] border border-red-100 shadow-sm">
+                    <p class="text-red-600 text-[10px] font-black uppercase mb-1 tracking-widest">Total Pengeluaran</p>
+                    <p id="finance-expense" class="text-3xl font-black text-red-700">Rp 0</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 admin-only hidden">
+                    <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-200 space-y-3">
+                        <p class="text-[10px] font-black text-slate-400 uppercase text-center mb-4 tracking-widest italic">Input Manual</p>
+                        <button onclick="updateBalance('in')" class="w-full bg-green-500 hover:bg-green-600 text-white py-4 rounded-2xl font-black text-[11px] uppercase shadow-lg transition-all">Catat Masuk</button>
+                        <button onclick="updateBalance('out')" class="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-black text-[11px] uppercase shadow-lg transition-all">Catat Keluar</button>
                     </div>
                 </div>
-                <div class="bg-[#1D3557] p-10 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden border-b-8 border-[#F1C40F]">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Pengeluaran Terakumulasi</p>
-                    <p id="finance-total-out" class="text-4xl font-black text-[#F1C40F]">Rp 0</p>
-                    <div class="absolute right-[-10px] top-[-10px] opacity-10 rotate-12">
-                        <svg width="100" height="100" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex justify-between items-center px-2">
+                        <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest italic">Log Riwayat & Detail Pengeluaran</h3>
+                        <button onclick="clearHistory()" class="admin-only hidden text-[9px] font-black text-red-400 uppercase hover:text-red-600">Hapus Semua Log</button>
                     </div>
+                    <div id="historyList" class="bg-white/50 rounded-[2rem] p-4 max-h-[500px] overflow-y-auto space-y-3 custom-scroll border border-slate-100 shadow-inner"></div>
                 </div>
-            </div>
-            <div class="bg-white rounded-[2rem] border shadow-sm">
-                <div class="p-6 border-b flex justify-between items-center bg-slate-50/50">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Riwayat Transaksi</span>
-                    <button onclick="clearHistory()" class="admin-only hidden text-[10px] text-red-500 font-black hover:underline">HAPUS SEMUA LOG</button>
-                </div>
-                <ul id="historyList" class="divide-y divide-slate-100"></ul>
             </div>
         </section>
 
         <section id="page-news" class="hidden space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-black text-[#1D3557] italic uppercase">Pengumuman</h2>
-                <button onclick="addNewsPrompt()" class="admin-only hidden bg-[#1D3557] text-white px-6 py-3 rounded-2xl text-[10px] font-black shadow-lg hover:scale-105 transition">+ INFO BARU</button>
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl font-black text-[#1D3557] italic uppercase tracking-tighter">Warta Informasi</h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Pengumuman & Agenda Remasta</p>
+                </div>
+                <button onclick="addNewsPrompt()" class="admin-only hidden bg-[#1D3557] text-white px-6 py-3 rounded-2xl text-[11px] font-black shadow-xl uppercase">+ Buat Info</button>
             </div>
-            <div id="newsList" class="grid grid-cols-1 gap-4"></div>
+            <div id="newsList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </section>
     </main>
 
-    <footer class="max-w-5xl mx-auto mt-8 mb-12 text-center">
-        <p class="text-[10px] font-black text-white/60 uppercase tracking-[0.5em]">REMASTA • 2026 • DIGITAL SYSTEM</p>
+    <footer class="max-w-5xl mx-auto mt-10 mb-20 text-center">
+        <p class="text-[10px] font-black text-white/40 uppercase tracking-[0.5em]">REMASTA PRO v11.0 • Cloud Integration • © 2024</p>
     </footer>
 
     <script>
+        // --- KONFIGURASI & STATE ---
         const ADMIN_CODE = "AFRB3"; 
         let isAdmin = false;
         let currentViewingMemberId = null;
@@ -203,227 +232,217 @@
             logo: null,
             members: [],
             balance: 0,
-            totalExpense: 0,
             history: [],
             announcements: []
         };
 
+        // --- SISTEM ADMIN ---
         function toggleAdmin() {
             if (!isAdmin) {
-                if (prompt("Masukkan PIN Admin:") === ADMIN_CODE) {
+                const pin = prompt("Masukkan PIN Keamanan Admin:");
+                if (pin === ADMIN_CODE) {
                     isAdmin = true;
                     document.getElementById('adminBtn').innerText = "MODE: ADMIN";
-                    document.getElementById('adminBtn').className = "bg-red-600 px-5 py-2 rounded-xl text-[10px] font-black text-white shadow-xl uppercase tracking-widest";
-                } else { alert("Akses ditolak!"); }
+                    document.getElementById('adminBtn').classList.replace('bg-slate-100', 'bg-red-600');
+                    document.getElementById('adminBtn').classList.replace('text-slate-500', 'text-white');
+                } else { alert("Akses Ditolak!"); }
             } else {
                 isAdmin = false;
                 document.getElementById('adminBtn').innerText = "MODE: ANGGOTA";
-                document.getElementById('adminBtn').className = "bg-slate-100 px-5 py-2 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-widest";
+                document.getElementById('adminBtn').classList.replace('bg-red-600', 'bg-slate-100');
+                document.getElementById('adminBtn').classList.replace('text-white', 'text-slate-500');
             }
             updateAdminUI();
         }
 
         function updateAdminUI() {
-            document.querySelectorAll('.admin-only').forEach(el => {
-                isAdmin ? el.classList.remove('hidden') : el.classList.add('hidden');
-            });
+            document.querySelectorAll('.admin-only').forEach(el => isAdmin ? el.classList.remove('hidden') : el.classList.add('hidden'));
             render();
-            if(currentViewingMemberId) viewProfile(currentViewingMemberId);
         }
 
+        // --- NAVIGASI ---
         function showPage(pageId) {
             document.querySelectorAll('main section').forEach(s => s.classList.add('hidden'));
             document.getElementById('page-' + pageId).classList.remove('hidden');
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab'));
-            const activeBtn = document.getElementById('tab-' + pageId);
-            if (activeBtn) activeBtn.classList.add('active-tab');
+            const activeTab = document.getElementById('tab-' + (pageId === 'profile' ? 'members' : pageId));
+            if(activeTab) activeTab.classList.add('active-tab');
             if (pageId !== 'profile') currentViewingMemberId = null;
-            window.scrollTo(0,0);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // --- RENDERING ---
         function render() {
             const d = window.data;
             document.getElementById('org-name-display').innerText = d.orgName;
             if (d.logo) document.getElementById('org-logo').src = d.logo;
 
             const totalHutang = d.members.reduce((acc, curr) => acc + (curr.debt || 0), 0);
-            
-            // Stats
+            const totalMasuk = d.history.filter(h => h.type === 'in').reduce((acc, curr) => acc + curr.amount, 0);
+            const totalKeluar = d.history.filter(h => h.type === 'out').reduce((acc, curr) => acc + curr.amount, 0);
+
+            // Dashboard
             document.getElementById('stat-balance').innerText = `Rp ${d.balance.toLocaleString('id-ID')}`;
             document.getElementById('stat-receivable').innerText = `Rp ${totalHutang.toLocaleString('id-ID')}`;
             document.getElementById('stat-members').innerText = d.members.length;
+
+            // Page Keuangan
             document.getElementById('finance-balance').innerText = `Rp ${d.balance.toLocaleString('id-ID')}`;
-            document.getElementById('finance-total-out').innerText = `Rp ${d.totalExpense.toLocaleString('id-ID')}`;
+            document.getElementById('finance-income').innerText = `Rp ${totalMasuk.toLocaleString('id-ID')}`;
+            document.getElementById('finance-expense').innerText = `Rp ${totalKeluar.toLocaleString('id-ID')}`;
 
-            // Members
+            // Member Table
             let mbHtml = "";
-            d.members.forEach((m) => {
-                const statusTag = m.debt > 0 ? 
-                    `<span class="text-red-600 font-bold text-[9px] bg-red-50 px-3 py-1 rounded-full border border-red-100">Hutang: Rp ${m.debt.toLocaleString()}</span>` : 
-                    `<span class="text-green-600 font-bold text-[9px] bg-green-50 px-3 py-1 rounded-full border border-green-100">Lunas ✅</span>`;
-
+            d.members.sort((a,b) => b.debt - a.debt).forEach(m => {
                 mbHtml += `
-                <tr class="hover:bg-slate-50/80 transition">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-slate-800 overflow-hidden flex items-center justify-center border-2 border-amber-400">
-                                ${m.photo ? `<img src="${m.photo}" class="w-full h-full object-cover">` : `<span class="text-white text-xs font-black">${m.name.charAt(0)}</span>`}
+                <tr class="hover:bg-slate-50 transition-all">
+                    <td class="px-8 py-5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-[#1D3557] flex items-center justify-center border-2 border-amber-400 overflow-hidden shadow-md">
+                                ${m.photo ? `<img src="${m.photo}" class="w-full h-full object-cover">` : `<span class="text-white text-sm font-black">${m.name.charAt(0)}</span>`}
                             </div>
                             <div>
-                                <p class="font-black text-slate-800 text-sm uppercase tracking-tight">${m.name}</p>
-                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">${m.status}</p>
+                                <p class="font-black text-[#1D3557] uppercase text-[12px]">${m.name}</p>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase">${m.status}</p>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-center whitespace-nowrap">${statusTag}</td>
-                    <td class="px-6 py-4 text-right">
-                        <button onclick="viewProfile(${m.id})" class="text-indigo-600 font-black text-[10px] border border-indigo-200 px-4 py-2 rounded-xl hover:bg-indigo-600 hover:text-white transition">DETAIL</button>
+                    <td class="px-8 py-5 text-center">
+                        <span class="text-[10px] font-black px-3 py-1.5 rounded-xl ${m.debt > 0 ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}">
+                            ${m.debt > 0 ? 'Rp ' + m.debt.toLocaleString('id-ID') : 'LUNAS ✓'}
+                        </span>
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        <button onclick="viewProfile(${m.id})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black transition-all">DETAIL</button>
                     </td>
                 </tr>`;
             });
-            document.getElementById('memberTableBody').innerHTML = mbHtml || '<tr><td colspan="3" class="p-12 text-center text-slate-400 italic">Data Kosong</td></tr>';
+            document.getElementById('memberTableBody').innerHTML = mbHtml || '<tr><td colspan="3" class="p-20 text-center opacity-40 italic">Kosong</td></tr>';
 
-            // History
+            // History Log
             let hsHtml = "";
-            d.history.slice(0, 20).forEach(h => {
-                const isOut = h.type === 'out';
+            d.history.forEach((h, index) => {
+                const isPemasukan = h.type === 'in';
                 hsHtml += `
-                <li class="p-5 flex justify-between items-center hover:bg-slate-50 transition border-l-4 ${isOut ? 'border-red-400' : 'border-green-400'}">
-                    <div>
-                        <p class="font-black text-slate-800 text-[10px] uppercase">${h.note}</p>
-                        <p class="text-[9px] text-slate-400 font-bold">${h.date}</p>
+                <div class="p-5 bg-white rounded-2xl border-l-4 ${isPemasukan ? 'border-green-500' : 'border-red-500'} shadow-sm flex justify-between items-center group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl ${isPemasukan ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'} flex items-center justify-center font-black text-lg">
+                            ${isPemasukan ? '↓' : '↑'}
+                        </div>
+                        <div>
+                            <p class="font-black uppercase text-[11px] text-slate-700">${h.note}</p>
+                            <p class="text-[9px] text-slate-400 font-bold">${h.date}</p>
+                        </div>
                     </div>
-                    <div class="${isOut ? 'text-red-600' : 'text-green-600'} font-black text-sm">
-                        ${isOut ? '-' : '+'} Rp ${h.amount.toLocaleString()}
+                    <div class="text-right">
+                        <p class="font-black text-[12px] ${isPemasukan ? 'text-green-600' : 'text-red-600'}">${isPemasukan ? '+' : '-'} Rp ${h.amount.toLocaleString('id-ID')}</p>
+                        <button onclick="deleteLog(${index})" class="admin-only ${isAdmin?'':'hidden'} text-[8px] font-black text-slate-300 hover:text-red-500 uppercase">Hapus</button>
                     </div>
-                </li>`;
-            });
-            document.getElementById('historyList').innerHTML = hsHtml || '<p class="p-10 text-center text-slate-400 italic">Belum ada aktivitas</p>';
-
-            // News
-            let anHtml = "";
-            d.announcements.forEach(a => {
-                anHtml += `
-                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative group border-t-4 border-[#1D3557]">
-                    <div class="flex justify-between items-start mb-3">
-                        <span class="text-[9px] text-indigo-600 font-black bg-indigo-50 px-3 py-1 rounded-lg uppercase tracking-widest">${a.date}</span>
-                        <button onclick="deleteNews(${a.id})" class="admin-only ${isAdmin ? '' : 'hidden'} text-red-400 hover:text-red-600 transition">×</button>
-                    </div>
-                    <h3 class="font-black text-slate-800 uppercase text-lg mb-2">${a.title}</h3>
-                    <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">${a.content}</p>
                 </div>`;
             });
-            document.getElementById('newsList').innerHTML = anHtml || '<p class="text-center text-slate-400 italic p-10">Tidak ada pengumuman</p>';
+            document.getElementById('historyList').innerHTML = hsHtml || '<div class="text-center py-20 opacity-30 text-xs italic uppercase tracking-widest">Belum ada riwayat transaksi</div>';
+
+            // News Info
+            let nwHtml = "";
+            d.announcements.forEach(a => {
+                nwHtml += `
+                <div class="bg-white p-8 rounded-[2.5rem] border shadow-lg relative border-t-4 border-[#1D3557]">
+                    <div class="flex justify-between mb-4">
+                        <span class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter">${a.date}</span>
+                        <button onclick="deleteNews(${a.id})" class="admin-only ${isAdmin?'':'hidden'} text-red-500 font-bold hover:text-red-700 transition-colors">Hapus</button>
+                    </div>
+                    <h3 class="font-black uppercase text-xl text-[#1D3557] italic mb-2 leading-tight">${a.title}</h3>
+                    <p class="text-[13px] text-slate-500 leading-relaxed font-medium mb-4">${a.content}</p>
+                </div>`;
+            });
+            document.getElementById('newsList').innerHTML = nwHtml || '<p class="col-span-full text-center py-20 opacity-30 font-bold italic text-xs uppercase tracking-widest">Tidak ada pengumuman</p>';
         }
 
-        // Logic Functions
-        window.changeOrgName = () => { let n = prompt("Nama Organisasi:", data.orgName); if (n) { data.orgName = n; save(); } }
-        window.changeLogoPrompt = () => { document.getElementById('logoInput').click(); }
-        window.processLogo = (input) => { if (input.files?.[0]) { let reader = new FileReader(); reader.onload = (e) => { data.logo = e.target.result; save(); }; reader.readAsDataURL(input.files[0]); } }
-        
-        window.addMemberPrompt = () => {
-            let n = prompt("Nama:"); let s = prompt("Jabatan:", "Anggota");
-            if (n && s) { 
-                data.members.push({ id: Date.now(), name: n, status: s, bio: "Anggota Remasta Aktif", debt: 0, photo: null }); 
-                save(); 
-            }
-        }
+        // --- AKSI SISTEM ---
+        window.processLogo = (input) => { if (input.files?.[0]) { const reader = new FileReader(); reader.onload = (e) => { window.data.logo = e.target.result; render(); save(); }; reader.readAsDataURL(input.files[0]); } };
+        window.changeOrgName = () => { const n = prompt("Ubah Nama Aplikasi:", data.orgName); if(n) { data.orgName = n; render(); save(); } };
+        window.addMemberPrompt = () => { const n = prompt("Nama Lengkap:"); const s = prompt("Jabatan:", "Anggota"); if(n && s) { data.members.push({ id: Date.now(), name: n, status: s, bio: "Aktif", debt: 0, photo: null }); render(); save(); } };
 
         window.viewProfile = (id) => {
             currentViewingMemberId = id;
-            const m = data.members.find(item => item.id === id);
-            if(!m) return;
-            const photoDisplay = m.photo ? `<img src="${m.photo}" class="w-full h-full object-cover">` : `<span class="text-white text-4xl font-black">${m.name.charAt(0)}</span>`;
-
+            const m = data.members.find(x => x.id === id);
             document.getElementById('profile-content').innerHTML = `
-                <div class="member-photo-frame mb-6 shadow-2xl relative">
-                    ${photoDisplay}
-                    <button onclick="document.getElementById('memberPhotoInput').click()" class="admin-only ${isAdmin ? '' : 'hidden'} absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-lg border">
-                        📸
-                    </button>
+                <div class="w-40 h-40 rounded-full bg-[#1D3557] mx-auto mb-6 border-4 border-amber-400 overflow-hidden relative group">
+                    ${m.photo ? `<img src="${m.photo}" class="w-full h-full object-cover">` : `<span class="text-white text-5xl font-black h-full flex items-center justify-center">${m.name.charAt(0)}</span>`}
+                    <div onclick="document.getElementById('memberPhotoInput').click()" class="admin-only ${isAdmin?'':'hidden'} absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all"><span class="text-white text-[10px] font-black uppercase">Ubah Foto</span></div>
                 </div>
-                <h2 class="text-4xl font-black text-[#1D3557] uppercase italic mb-1">${m.name}</h2>
-                <p class="text-[#F1C40F] font-black text-xs uppercase tracking-[0.3em] mb-6">${m.status}</p>
-                <div class="p-6 rounded-2xl bg-slate-50 text-slate-500 italic text-sm mb-8 border border-dashed border-slate-300">"${m.bio}"</div>
-                
-                <div class="bg-slate-900 rounded-3xl p-8 mb-8 border-b-4 border-amber-400">
-                    <p class="text-[10px] text-slate-500 font-black uppercase mb-2 tracking-widest">Status Keuangan</p>
-                    <p class="text-3xl font-black ${m.debt > 0 ? 'text-amber-400' : 'text-green-400'}">
-                        ${m.debt > 0 ? 'Tunggakan: Rp ' + m.debt.toLocaleString() : 'LUNAS ✅'}
-                    </p>
+                <h2 class="text-4xl font-black uppercase text-[#1D3557] italic mb-1">${m.name}</h2>
+                <p class="text-amber-500 font-black text-[11px] tracking-[0.3em] uppercase mb-6">${m.status}</p>
+                <div class="max-w-md mx-auto p-5 bg-slate-50 rounded-[2rem] italic text-sm text-slate-500 mb-8 border border-slate-100">"${m.bio}"</div>
+                <div class="bg-[#1D3557] text-white p-8 rounded-[2rem] shadow-xl mb-8">
+                    <p class="text-[10px] uppercase opacity-50 mb-1 font-black tracking-widest">Data Keuangan Anggota</p>
+                    <p class="text-2xl font-black ${m.debt > 0 ? 'text-amber-400' : 'text-green-400'}">${m.debt > 0 ? 'Sisa Tagihan: Rp '+m.debt.toLocaleString('id-ID') : 'LUNAS (✓)'}</p>
                 </div>
-
-                <div class="admin-only ${isAdmin ? '' : 'hidden'} flex flex-wrap gap-3 justify-center pt-8 border-t">
-                    <button onclick="quickPay(${m.id})" class="bg-green-600 text-white px-8 py-4 rounded-2xl text-[10px] font-black shadow-lg uppercase tracking-widest hover:bg-green-700">Bayar Kas</button>
-                    <button onclick="editMember(${m.id})" class="bg-slate-100 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest">Edit</button>
-                    <button onclick="deleteMember(${m.id})" class="bg-red-50 text-red-600 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest">Hapus</button>
+                <div class="admin-only ${isAdmin?'':'hidden'} flex flex-wrap justify-center gap-3 border-t border-slate-100 pt-8">
+                    <button onclick="quickPay(${m.id})" class="bg-green-600 text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase shadow-lg">Konfirmasi Bayar</button>
+                    <button onclick="editBio(${m.id})" class="bg-slate-100 text-slate-500 px-8 py-4 rounded-2xl font-black text-[11px] uppercase">Edit Profil</button>
+                    <button onclick="deleteMember(${m.id})" class="bg-red-50 text-red-500 px-8 py-4 rounded-2xl font-black text-[11px] uppercase">Hapus Anggota</button>
                 </div>
             `;
             showPage('profile');
-        }
+        };
 
+        window.processMemberPhoto = (input) => { if (input.files?.[0]) { const reader = new FileReader(); reader.onload = (e) => { const idx = data.members.findIndex(x => x.id === currentViewingMemberId); data.members[idx].photo = e.target.result; viewProfile(currentViewingMemberId); save(); }; reader.readAsDataURL(input.files[0]); } };
+        
         window.quickPay = (id) => {
-            const idx = data.members.findIndex(m => m.id === id);
-            let debt = data.members[idx].debt;
-            if (debt <= 0) return alert("Sudah Lunas!");
-            let amount = parseInt(prompt("Nominal Pembayaran:", debt));
-            if (amount > 0 && amount <= debt) {
+            const idx = data.members.findIndex(x => x.id === id);
+            const amount = parseInt(prompt(`Terima Bayar dari ${data.members[idx].name}. Nominal:`, data.members[idx].debt));
+            if(amount > 0) {
                 data.balance += amount;
                 data.members[idx].debt -= amount;
+                if(data.members[idx].debt < 0) data.members[idx].debt = 0;
                 data.history.unshift({ type: 'in', note: `Kas: ${data.members[idx].name}`, amount, date: new Date().toLocaleString('id-ID') });
+                viewProfile(id);
                 save();
             }
-        }
-
-        window.updateBalance = (type) => {
-            let amount = parseInt(prompt("Nominal (Rp):"));
-            let note = prompt("Keterangan:");
-            if (amount > 0 && note) {
-                if (type === 'out' && amount > data.balance) return alert("Saldo Kurang!");
-                data.balance += (type === 'in' ? amount : -amount);
-                if (type === 'out') data.totalExpense += amount;
-                data.history.unshift({ type, note, amount, date: new Date().toLocaleString('id-ID') });
-                save();
-            }
-        }
+        };
 
         window.chargeAllMembers = () => {
-            let amount = parseInt(prompt("Tagihan Kas (Rp):"));
-            if (amount > 0) {
+            const amount = parseInt(prompt("Berikan Tagihan Kas Massal (Rp):"));
+            if(amount > 0) {
                 data.members.forEach(m => m.debt += amount);
-                data.history.unshift({ type: 'info', note: `Tagihan Massal`, amount: amount * data.members.length, date: new Date().toLocaleString('id-ID') });
-                save();
+                render(); save(); alert("Berhasil ditagih.");
             }
-        }
+        };
 
-        window.editMember = (id) => {
-            const m = data.members.find(x => x.id === id);
-            let n = prompt("Nama:", m.name);
-            let b = prompt("Bio:", m.bio);
-            if(n) { m.name = n; m.bio = b; save(); }
-        }
+        window.updateBalance = (type) => {
+            const amount = parseInt(prompt("Nominal:"));
+            const note = prompt("Keterangan:");
+            if(amount > 0 && note) {
+                if(type === 'out' && amount > data.balance) { alert("Saldo Tidak Cukup!"); return; }
+                data.balance += (type === 'in' ? amount : -amount);
+                data.history.unshift({ type, note, amount, date: new Date().toLocaleString('id-ID') });
+                render(); save();
+            }
+        };
 
-        window.deleteMember = (id) => { if(confirm("Hapus anggota ini?")) { data.members = data.members.filter(m => m.id !== id); save(); showPage('members'); } }
-        window.clearHistory = () => { if(confirm("Hapus semua log?")) { data.history = []; data.totalExpense = 0; save(); } }
         window.addNewsPrompt = () => {
-            let t = prompt("Judul:"); let c = prompt("Isi:");
-            if (t && c) {
+            const t = prompt("Judul:"); const c = prompt("Isi Info:");
+            if(t && c) {
                 data.announcements.unshift({ id: Date.now(), title: t, content: c, date: new Date().toLocaleDateString('id-ID') });
-                save();
+                render(); save();
             }
-        }
-        window.deleteNews = (id) => { if(confirm("Hapus info?")) { data.announcements = data.announcements.filter(a => a.id !== id); save(); } }
-        window.processMemberPhoto = (input) => { 
-            if (input.files[0]) { 
-                let reader = new FileReader(); 
-                reader.onload = (e) => { 
-                    const idx = data.members.findIndex(m => m.id === currentViewingMemberId);
-                    data.members[idx].photo = e.target.result; 
-                    save(); 
-                }; 
-                reader.readAsDataURL(input.files[0]); 
-            } 
-        }
+        };
+
+        window.editBio = (id) => {
+            const idx = data.members.findIndex(x => x.id === id);
+            const b = prompt("Ubah Bio:", data.members[idx].bio);
+            const s = prompt("Ubah Jabatan:", data.members[idx].status);
+            if(b) data.members[idx].bio = b;
+            if(s) data.members[idx].status = s;
+            viewProfile(id); save();
+        };
+
+        window.deleteLog = (index) => { if(confirm("Hapus log?")) { data.history.splice(index, 1); render(); save(); } };
+        window.deleteMember = (id) => { if(confirm("Hapus?")) { data.members = data.members.filter(x => x.id!==id); render(); save(); showPage('members'); } };
+        window.deleteNews = (id) => { if(confirm("Hapus info?")) { data.announcements = data.announcements.filter(x => x.id!==id); render(); save(); } };
+        window.clearHistory = () => { if(confirm("Bersihkan semua riwayat?")) { data.history = []; render(); save(); } };
+
     </script>
 </body>
 </html>
