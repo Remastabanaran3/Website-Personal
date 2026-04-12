@@ -26,24 +26,23 @@
         window.save = () => {
             set(dataRef, window.data).then(() => {
                 console.log("Data Berhasil Disinkronisasi");
-            }).catch(err => alert("Gagal Simpan: " + err));
+            }).catch(err => alert("Gagal Simpan: " + err.message));
         };
 
         onValue(dataRef, (snapshot) => {
             const remoteData = snapshot.val();
             if (remoteData) {
                 window.data = {
-                    ...window.data,
-                    ...remoteData,
+                    orgName: remoteData.orgName || "REMASTA",
+                    logo: remoteData.logo || null,
+                    balance: remoteData.balance || 0,
                     members: remoteData.members || [],
                     history: remoteData.history || [],
                     announcements: remoteData.announcements || []
                 };
-                render();
-                if(window.currentViewingMemberId) viewProfile(window.currentViewingMemberId);
-            } else {
-                render();
             }
+            render();
+            if(window.currentViewingMemberId) viewProfile(window.currentViewingMemberId);
         });
     </script>
 
@@ -257,19 +256,19 @@
             document.getElementById('org-name-display').innerText = d.orgName;
             if (d.logo) document.getElementById('org-logo').src = d.logo;
 
-            const totalHutang = d.members.reduce((acc, curr) => acc + (curr.debt || 0), 0);
-            const totalMasuk = d.history.filter(h => h.type === 'in').reduce((acc, curr) => acc + curr.amount, 0);
-            const totalKeluar = d.history.filter(h => h.type === 'out').reduce((acc, curr) => acc + curr.amount, 0);
+            const totalHutang = (d.members || []).reduce((acc, curr) => acc + (curr.debt || 0), 0);
+            const totalMasuk = (d.history || []).filter(h => h.type === 'in').reduce((acc, curr) => acc + curr.amount, 0);
+            const totalKeluar = (d.history || []).filter(h => h.type === 'out').reduce((acc, curr) => acc + curr.amount, 0);
 
             document.getElementById('stat-balance').innerText = `Rp ${d.balance.toLocaleString('id-ID')}`;
             document.getElementById('stat-receivable').innerText = `Rp ${totalHutang.toLocaleString('id-ID')}`;
-            document.getElementById('stat-members').innerText = d.members.length;
+            document.getElementById('stat-members').innerText = (d.members || []).length;
             document.getElementById('finance-balance').innerText = `Rp ${d.balance.toLocaleString('id-ID')}`;
             document.getElementById('finance-income').innerText = `Rp ${totalMasuk.toLocaleString('id-ID')}`;
             document.getElementById('finance-expense').innerText = `Rp ${totalKeluar.toLocaleString('id-ID')}`;
 
             let mbHtml = "";
-            d.members.sort((a,b) => b.debt - a.debt).forEach(m => {
+            [...(d.members || [])].sort((a,b) => (b.debt || 0) - (a.debt || 0)).forEach(m => {
                 mbHtml += `
                 <tr class="hover:bg-slate-50 transition-all">
                     <td class="px-8 py-5">
@@ -296,7 +295,7 @@
             document.getElementById('memberTableBody').innerHTML = mbHtml || '<tr><td colspan="3" class="p-10 text-center opacity-30 italic">Kosong</td></tr>';
 
             let hsHtml = "";
-            d.history.forEach((h, index) => {
+            (d.history || []).forEach((h, index) => {
                 const isIn = h.type === 'in';
                 hsHtml += `
                 <div class="p-5 bg-white rounded-2xl border-l-4 ${isIn ? 'border-green-500' : 'border-red-500'} shadow-sm flex justify-between items-center">
@@ -318,7 +317,7 @@
             document.getElementById('historyList').innerHTML = hsHtml || '<div class="text-center py-10 opacity-30 text-xs italic">Belum ada riwayat</div>';
 
             let nwHtml = "";
-            d.announcements.forEach(a => {
+            (d.announcements || []).forEach(a => {
                 nwHtml += `
                 <div class="bg-white p-8 rounded-[2.5rem] border shadow-lg border-t-4 border-[#1D3557]">
                     <div class="flex justify-between mb-4">
@@ -339,6 +338,7 @@
         window.viewProfile = (id) => {
             window.currentViewingMemberId = id;
             const m = data.members.find(x => x.id === id);
+            if(!m) return;
             document.getElementById('profile-content').innerHTML = `
                 <div class="w-40 h-40 rounded-full bg-[#1D3557] mx-auto mb-6 border-4 border-amber-400 overflow-hidden relative group">
                     ${m.photo ? `<img src="${m.photo}" class="w-full h-full object-cover">` : `<span class="text-white text-5xl font-black h-full flex items-center justify-center">${m.name.charAt(0)}</span>`}
@@ -358,11 +358,13 @@
             showPage('profile');
         };
 
-        window.processMemberPhoto = (i) => { if (i.files?.[0]) { const r = new FileReader(); r.onload = (e) => { const idx = data.members.findIndex(x => x.id === window.currentViewingMemberId); data.members[idx].photo = e.target.result; viewProfile(window.currentViewingMemberId); save(); }; r.readAsDataURL(i.files[0]); } };
+        window.processMemberPhoto = (i) => { if (i.files?.[0]) { const r = new FileReader(); r.onload = (e) => { const idx = data.members.findIndex(x => x.id === window.currentViewingMemberId); if(idx !== -1) { data.members[idx].photo = e.target.result; viewProfile(window.currentViewingMemberId); save(); } }; r.readAsDataURL(i.files[0]); } };
         window.quickPay = (id) => {
             const idx = data.members.findIndex(x => x.id === id);
-            const amount = parseInt(prompt(`Terima Bayar dari ${data.members[idx].name}:`, data.members[idx].debt));
-            if(amount > 0) {
+            if(idx === -1) return;
+            const amountInput = prompt(`Terima Bayar dari ${data.members[idx].name}:`, data.members[idx].debt);
+            const amount = parseInt(amountInput);
+            if(!isNaN(amount) && amount > 0) {
                 data.balance += amount; data.members[idx].debt -= amount;
                 if(data.members[idx].debt < 0) data.members[idx].debt = 0;
                 data.history.unshift({ type: 'in', note: `Kas: ${data.members[idx].name}`, amount, date: new Date().toLocaleString('id-ID') });
@@ -372,12 +374,14 @@
 
         window.chargeAllMembers = () => {
             const a = parseInt(prompt("Tagihan Kas (Rp):"));
-            if(a > 0) { data.members.forEach(m => m.debt += a); render(); save(); }
+            if(!isNaN(a) && a > 0) { data.members.forEach(m => m.debt = (m.debt || 0) + a); render(); save(); }
         };
 
         window.updateBalance = (t) => {
-            const a = parseInt(prompt("Nominal:")); const n = prompt("Keterangan:");
-            if(a > 0 && n) {
+            const amountInput = prompt("Nominal:");
+            const a = parseInt(amountInput);
+            const n = prompt("Keterangan:");
+            if(!isNaN(a) && a > 0 && n) {
                 if(t === 'out' && a > data.balance) return alert("Saldo Kurang!");
                 data.balance += (t === 'in' ? a : -a);
                 data.history.unshift({ type: t, note: n, amount: a, date: new Date().toLocaleString('id-ID') });
