@@ -1,0 +1,7 @@
+#org-logo { 
+    object-fit: contain; /* Gambar akan dikecilkan agar muat di dalam kotak tanpa terpotong */
+    width: 100%;       /* Lebar gambar mengikuti lebar kotak (40px) */
+    height: 100%;      /* Tinggi gambar mengikuti tinggi kotak (40px) */
+    max-width: 40px;   /* Batas keras agar gambar tidak bisa lebih besar dari 40px */
+    max-height: 40px;  /* Batas keras agar gambar tidak bisa lebih tinggi dari 40px */
+}
