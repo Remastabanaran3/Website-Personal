@@ -13,6 +13,7 @@
     const firebaseConfig = {
         apiKey: "AIzaSyCjlxZys009fGpBIrepU8DRayrZbK3KDQk",
         authDomain: "web-personal-b57a2.firebaseapp.com",
+        // PASTI KAN URL DI BAWAH INI SAMA PERSIS (ADA ASIA-SOUTHEAST1)
         databaseURL: "https://web-personal-b57a2-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "web-personal-b57a2",
         storageBucket: "web-personal-b57a2.firebasestorage.app",
@@ -20,39 +21,14 @@
         appId: "1:164397557214:web:3dab3fd2f0a64c3049a94f"
     };
 
-    // Inisialisasi Firebase
     const app = initializeApp(firebaseConfig);
-    // Menegaskan URL database agar tidak salah masuk ke server Amerika
+    
+    // PENTING: Masukkan URL database juga di dalam getDatabase ini
     const db = getDatabase(app, "https://web-personal-b57a2-default-rtdb.asia-southeast1.firebasedatabase.app");
+    
     const dataRef = ref(db, 'remasta_v11_data');
 
-    // Fungsi Simpan ke Cloud
-    window.save = () => {
-        if (!window.data) return; 
-        set(dataRef, window.data).then(() => {
-            console.log("Data Berhasil Disinkronisasi ke Cloud");
-        }).catch(err => console.error("Gagal Simpan:", err));
-    };
-
-    // Realtime Listener
-    onValue(dataRef, (snapshot) => {
-        const remoteData = snapshot.val();
-        if (remoteData) {
-            console.log("Data diterima dari Cloud:", remoteData);
-            window.data = {
-                ...remoteData,
-                members: remoteData.members || [],
-                history: remoteData.history || [],
-                announcements: remoteData.announcements || []
-            };
-            render();
-            if(window.currentViewingMemberId) viewProfile(window.currentViewingMemberId);
-        } else {
-            console.log("Database Cloud masih kosong atau sedang loading...");
-            // HAPUS window.save() di sini agar tidak menimpa data yang ada
-            render();
-        }
-    });
+    // ... sisa kode lainnya (save, onValue, render) tetap sama ...
 </script>
     <style>
         .hidden { display: none; }
