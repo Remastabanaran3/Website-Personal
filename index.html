@@ -13,7 +13,6 @@
     const firebaseConfig = {
         apiKey: "AIzaSyCjlxZys009fGpBIrepU8DRayrZbK3KDQk",
         authDomain: "web-personal-b57a2.firebaseapp.com",
-        // PASTI KAN URL DI BAWAH INI SAMA PERSIS (ADA ASIA-SOUTHEAST1)
         databaseURL: "https://web-personal-b57a2-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "web-personal-b57a2",
         storageBucket: "web-personal-b57a2.firebasestorage.app",
@@ -22,13 +21,42 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    
-    // PENTING: Masukkan URL database juga di dalam getDatabase ini
     const db = getDatabase(app, "https://web-personal-b57a2-default-rtdb.asia-southeast1.firebasedatabase.app");
-    
     const dataRef = ref(db, 'remasta_v11_data');
 
-    // ... sisa kode lainnya (save, onValue, render) tetap sama ...
+    // 1. FUNGSI UNTUK MENGAMBIL DATA SAAT REFRESH (onValue)
+    onValue(dataRef, (snapshot) => {
+        const remoteData = snapshot.val();
+        console.log("Data Cloud Diterima:", remoteData);
+
+        if (remoteData) {
+            // Update variabel global window.data dengan data dari internet
+            window.data = {
+                ...remoteData,
+                members: remoteData.members || [],
+                history: remoteData.history || [],
+                announcements: remoteData.announcements || []
+            };
+            
+            // Panggil fungsi gambar tabel (render)
+            if (typeof render === "function") render();
+            
+            // Jika sedang buka profil anggota, update juga tampilannya
+            if (window.currentViewingMemberId && typeof viewProfile === "function") {
+                viewProfile(window.currentViewingMemberId);
+            }
+        } else {
+            console.log("Database Cloud masih kosong.");
+        }
+    });
+
+    // 2. FUNGSI UNTUK MENYIMPAN DATA KE CLOUD (save)
+    window.save = () => {
+        if (!window.data) return;
+        set(dataRef, window.data)
+            .then(() => console.log("Berhasil Sinkronisasi ke Cloud"))
+            .catch((err) => console.error("Gagal Simpan:", err));
+    };
 </script>
     <style>
         .hidden { display: none; }
