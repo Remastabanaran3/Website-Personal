@@ -7,28 +7,37 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        // Import Firebase SDK terbaru
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
 
+        // Konfigurasi Firebase sesuai permintaan (dengan Database URL Asia-Southeast1)
         const firebaseConfig = {
             apiKey: "AIzaSyCjlxZys009fGpBIrepU8DRayrZbK3KDQk",
             authDomain: "web-personal-b57a2.firebaseapp.com",
+            databaseURL: "https://web-personal-b57a2-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "web-personal-b57a2",
             storageBucket: "web-personal-b57a2.firebasestorage.app",
             messagingSenderId: "164397557214",
             appId: "1:164397557214:web:3dab3fd2f0a64c3049a94f"
         };
 
+        // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const dataRef = ref(db, 'remasta_v11_data');
 
+        // Fungsi Simpan ke Cloud (Menghapus jejak LocalStorage)
         window.save = () => {
             set(dataRef, window.data).then(() => {
                 console.log("Data Berhasil Disinkronisasi ke Cloud");
-            }).catch(err => console.error("Gagal Simpan:", err));
+            }).catch(err => {
+                console.error("Gagal Simpan ke Cloud:", err);
+                alert("Gagal sinkronisasi data! Cek koneksi.");
+            });
         };
 
+        // Realtime Listener: Mengambil data dari Cloud secara otomatis
         onValue(dataRef, (snapshot) => {
             const remoteData = snapshot.val();
             if (remoteData) {
@@ -39,8 +48,10 @@
                     announcements: remoteData.announcements || []
                 };
                 render();
+                // Jika sedang melihat profil, refresh tampilannya
                 if(window.currentViewingMemberId) viewProfile(window.currentViewingMemberId);
             } else {
+                // Jika database kosong, inisialisasi dengan data default
                 window.save();
                 render();
             }
@@ -87,7 +98,7 @@
             <button id="adminBtn" onclick="toggleAdmin()" class="bg-slate-100 px-5 py-2.5 rounded-2xl text-[10px] font-black text-slate-500 uppercase shadow-inner">Mode: Anggota</button>
         </div>
         
-        <nav class="flex justify-center border-t bg-slate-50 overflow-x-auto custom-scroll">
+        <nav class="flex justify-start md:justify-center border-t bg-slate-50 overflow-x-auto custom-scroll">
             <button onclick="showPage('home')" id="tab-home" class="py-4 px-8 text-[11px] uppercase font-black tracking-widest active-tab whitespace-nowrap">Beranda</button>
             <button onclick="showPage('members')" id="tab-members" class="py-4 px-8 text-[11px] uppercase font-black tracking-widest whitespace-nowrap">Anggota</button>
             <button onclick="showPage('finance')" id="tab-finance" class="py-4 px-8 text-[11px] uppercase font-black tracking-widest whitespace-nowrap">Keuangan</button>
@@ -100,10 +111,9 @@
             <div class="bg-[#1D3557] text-white p-10 md:p-16 rounded-[3rem] relative overflow-hidden shadow-2xl">
                 <div class="relative z-10">
                     <h3 class="text-[#F1C40F] font-black italic tracking-widest text-sm mb-3 uppercase">Ahlan wa Sahlan</h3>
-                    <h2 class="text-5xl md:text-7xl font-black italic tracking-tighter leading-none uppercase">Selamat <br> Datang</h2>
-                    <p class="opacity-60 text-[11px] uppercase tracking-[0.4em] mt-6 border-t border-white/20 pt-6">Sistem Manajemen Terpadu Remaja Masjid Al-Fattah</p>
+                    <h2 class="text-5xl md:text-7xl font-black italic tracking-tighter leading-none uppercase">Dashboard</h2>
+                    <p class="opacity-60 text-[11px] uppercase tracking-[0.4em] mt-6 border-t border-white/20 pt-6">Pusat Informasi dan Manajemen Remaja Masjid Al-Fattah</p>
                 </div>
-                <div class="absolute right-[-30px] bottom-[-30px] opacity-10 text-[200px] font-black italic select-none">R</div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -112,7 +122,7 @@
                     <p id="stat-balance" class="text-3xl font-black text-[#1D3557]">Rp 0</p>
                 </div>
                 <div class="bg-white p-8 rounded-[2.5rem] border-l-8 border-amber-400 shadow-md card-stat">
-                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1 tracking-widest">Total Piutang</p>
+                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1 tracking-widest">Total Tunggakan</p>
                     <p id="stat-receivable" class="text-3xl font-black text-amber-500">Rp 0</p>
                 </div>
                 <div class="bg-white p-8 rounded-[2.5rem] border-l-8 border-indigo-500 shadow-md card-stat">
@@ -162,7 +172,6 @@
                 </div>
                 <button onclick="chargeAllMembers()" class="admin-only hidden bg-amber-400 text-[#1D3557] px-6 py-3 rounded-2xl text-[11px] font-black shadow-lg uppercase">⚡ Tagih Semua</button>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-[#1D3557] p-8 rounded-[2.5rem] text-white shadow-xl">
                     <p class="text-[10px] font-black opacity-50 uppercase mb-1 tracking-widest">Saldo Bersih</p>
@@ -177,7 +186,6 @@
                     <p id="finance-expense" class="text-3xl font-black text-red-700">Rp 0</p>
                 </div>
             </div>
-
             <div class="grid lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-1 admin-only hidden">
                     <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-200 space-y-3">
@@ -205,7 +213,7 @@
     </main>
 
     <footer class="max-w-5xl mx-auto mt-10 mb-20 text-center opacity-40">
-        <p class="text-[10px] font-black text-white uppercase tracking-[0.5em]">REMASTA PRO v11.0 • © 2026</p>
+        <p class="text-[10px] font-black text-white uppercase tracking-[0.5em]"> OFFICIAL REMASTA• © 2026</p>
     </footer>
 
     <script>
@@ -213,6 +221,7 @@
         let isAdmin = false;
         window.currentViewingMemberId = null;
 
+        // Inisialisasi data global (Data awal sebelum ditarik dari cloud)
         window.data = { orgName: "REMASTA", logo: null, members: [], balance: 0, history: [], announcements: [] };
 
         function toggleAdmin() {
@@ -311,6 +320,7 @@
             document.getElementById('newsList').innerHTML = nwHtml || '<p class="col-span-full text-center py-10 opacity-30 italic">Tidak ada pengumuman</p>';
         }
 
+        // Logic Fungsi Update (Mengarah ke window.save yang memicu Firebase)
         window.quickPay = (id) => {
             const idx = data.members.findIndex(x => x.id === id);
             const m = data.members[idx];
@@ -322,8 +332,6 @@
                 data.balance += amount;
                 data.members[idx].debt = sisa < 0 ? 0 : sisa;
                 data.history.unshift({ type: 'in', note: `Pembayaran: ${m.name} ${sisa <= 0 ? '(LUNAS)' : '(DICICIL)'}`, amount, date: new Date().toLocaleString('id-ID') });
-                if(sisa > 0) alert(`Berhasil dikonfirmasi! Sisa tunggakan ${m.name} adalah Rp ${sisa.toLocaleString('id-ID')}`);
-                else alert(`Berhasil dikonfirmasi! ${m.name} dinyatakan LUNAS.`);
                 render(); save();
             }
         };
@@ -352,12 +360,12 @@
         window.processLogo = (i) => { if (i.files?.[0]) { const r = new FileReader(); r.onload = (e) => { data.logo = e.target.result; render(); save(); }; r.readAsDataURL(i.files[0]); } };
         window.changeOrgName = () => { const n = prompt("Nama Aplikasi:", data.orgName); if(n) { data.orgName = n; render(); save(); } };
         window.addMemberPrompt = () => { const n = prompt("Nama:"); const s = prompt("Jabatan:", "Anggota"); if(n && s) { data.members.push({ id: Date.now(), name: n, status: s, debt: 0, photo: null }); render(); save(); } };
-        window.processMemberPhoto = (i) => { if (i.files?.[0]) { const r = new FileReader(); r.onload = (e) => { const idx = data.members.findIndex(x => x.id === window.currentViewingMemberId); data.members[idx].photo = e.target.result; viewProfile(window.currentViewingMemberId); save(); }; r.readAsDataURL(i.files[0]); } };
+        window.processMemberPhoto = (i) => { if (i.files?.[0]) { const r = new FileReader(); r.onload = (e) => { const idx = data.members.findIndex(x => x.id === window.currentViewingMemberId); data.members[idx].photo = e.target.result; save(); }; r.readAsDataURL(i.files[0]); } };
         window.chargeAllMembers = () => { const a = parseInt(prompt("Tagihan Kas per Orang (Rp):")); if(a > 0) { data.members.forEach(m => m.debt += a); render(); save(); } };
         window.updateBalance = (t) => { const a = parseInt(prompt("Nominal (Rp):")); const n = prompt("Keterangan:"); if(a > 0 && n) { if(t === 'out' && a > data.balance) return alert("Saldo Kurang!"); data.balance += (t === 'in' ? a : -a); data.history.unshift({ type: t, note: n, amount: a, date: new Date().toLocaleString('id-ID') }); render(); save(); } };
         window.addNewsPrompt = () => { const t = prompt("Judul Info:"); const c = prompt("Isi Info:"); if(t && c) { data.announcements.unshift({ id: Date.now(), title: t, content: c, date: new Date().toLocaleDateString('id-ID') }); render(); save(); } };
         window.deleteLog = (i) => { if(confirm("Hapus?")) { data.history.splice(i, 1); render(); save(); } };
-        window.deleteMember = (id) => { if(confirm("Hapus?")) { data.members = data.members.filter(x => x.id!==id); render(); save(); showPage('members'); } };
+        window.deleteMember = (id) => { if(confirm("Hapus?")) { data.members = data.members.filter(x => x.id!==id); save(); showPage('members'); } };
         window.deleteNews = (id) => { if(confirm("Hapus?")) { data.announcements = data.announcements.filter(x => x.id!==id); render(); save(); } };
         window.clearHistory = () => { if(confirm("Bersihkan semua?")) { data.history = []; render(); save(); } };
     </script>
