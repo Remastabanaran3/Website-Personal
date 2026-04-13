@@ -6,58 +6,54 @@
     <title>REMASTA PRO - Cloud System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script type="module">
-        // Import Firebase SDK terbaru
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
 
-        // Konfigurasi Firebase sesuai permintaan (dengan Database URL Asia-Southeast1)
-        const firebaseConfig = {
-            apiKey: "AIzaSyCjlxZys009fGpBIrepU8DRayrZbK3KDQk",
-            authDomain: "web-personal-b57a2.firebaseapp.com",
-            databaseURL: "https://web-personal-b57a2-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "web-personal-b57a2",
-            storageBucket: "web-personal-b57a2.firebasestorage.app",
-            messagingSenderId: "164397557214",
-            appId: "1:164397557214:web:3dab3fd2f0a64c3049a94f"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyCjlxZys009fGpBIrepU8DRayrZbK3KDQk",
+        authDomain: "web-personal-b57a2.firebaseapp.com",
+        databaseURL: "https://web-personal-b57a2-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "web-personal-b57a2",
+        storageBucket: "web-personal-b57a2.firebasestorage.app",
+        messagingSenderId: "164397557214",
+        appId: "1:164397557214:web:3dab3fd2f0a64c3049a94f"
+    };
 
-        // Inisialisasi Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const dataRef = ref(db, 'remasta_v11_data');
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    // Menegaskan URL database agar tidak salah masuk ke server Amerika
+    const db = getDatabase(app, "https://web-personal-b57a2-default-rtdb.asia-southeast1.firebasedatabase.app");
+    const dataRef = ref(db, 'remasta_v11_data');
 
-        // Fungsi Simpan ke Cloud (Menghapus jejak LocalStorage)
-        window.save = () => {
-            set(dataRef, window.data).then(() => {
-                console.log("Data Berhasil Disinkronisasi ke Cloud");
-            }).catch(err => {
-                console.error("Gagal Simpan ke Cloud:", err);
-                alert("Gagal sinkronisasi data! Cek koneksi.");
-            });
-        };
+    // Fungsi Simpan ke Cloud
+    window.save = () => {
+        if (!window.data) return; 
+        set(dataRef, window.data).then(() => {
+            console.log("Data Berhasil Disinkronisasi ke Cloud");
+        }).catch(err => console.error("Gagal Simpan:", err));
+    };
 
-        // Realtime Listener: Mengambil data dari Cloud secara otomatis
-        onValue(dataRef, (snapshot) => {
-            const remoteData = snapshot.val();
-            if (remoteData) {
-                window.data = {
-                    ...remoteData,
-                    members: remoteData.members || [],
-                    history: remoteData.history || [],
-                    announcements: remoteData.announcements || []
-                };
-                render();
-                // Jika sedang melihat profil, refresh tampilannya
-                if(window.currentViewingMemberId) viewProfile(window.currentViewingMemberId);
-            } else {
-                // Jika database kosong, inisialisasi dengan data default
-                window.save();
-                render();
-            }
-        });
-    </script>
-
+    // Realtime Listener
+    onValue(dataRef, (snapshot) => {
+        const remoteData = snapshot.val();
+        if (remoteData) {
+            console.log("Data diterima dari Cloud:", remoteData);
+            window.data = {
+                ...remoteData,
+                members: remoteData.members || [],
+                history: remoteData.history || [],
+                announcements: remoteData.announcements || []
+            };
+            render();
+            if(window.currentViewingMemberId) viewProfile(window.currentViewingMemberId);
+        } else {
+            console.log("Database Cloud masih kosong atau sedang loading...");
+            // HAPUS window.save() di sini agar tidak menimpa data yang ada
+            render();
+        }
+    });
+</script>
     <style>
         .hidden { display: none; }
         .active-tab { border-bottom: 4px solid #F1C40F; color: #1D3557; font-weight: 900; }
