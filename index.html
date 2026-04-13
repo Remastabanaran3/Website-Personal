@@ -24,38 +24,26 @@
     const db = getDatabase(app, "https://web-personal-b57a2-default-rtdb.asia-southeast1.firebasedatabase.app");
     const dataRef = ref(db, 'remasta_v11_data');
 
-    // 1. FUNGSI UNTUK MENGAMBIL DATA SAAT REFRESH (onValue)
+    // --- 1. AMBIL DATA DARI CLOUD (Agar sinkron di semua HP) ---
     onValue(dataRef, (snapshot) => {
         const remoteData = snapshot.val();
-        console.log("Data Cloud Diterima:", remoteData);
-
         if (remoteData) {
-            // Update variabel global window.data dengan data dari internet
             window.data = {
                 ...remoteData,
                 members: remoteData.members || [],
                 history: remoteData.history || [],
                 announcements: remoteData.announcements || []
             };
-            
-            // Panggil fungsi gambar tabel (render)
             if (typeof render === "function") render();
-            
-            // Jika sedang buka profil anggota, update juga tampilannya
-            if (window.currentViewingMemberId && typeof viewProfile === "function") {
-                viewProfile(window.currentViewingMemberId);
-            }
-        } else {
-            console.log("Database Cloud masih kosong.");
         }
     });
 
-    // 2. FUNGSI UNTUK MENYIMPAN DATA KE CLOUD (save)
+    // --- 2. KIRIM DATA KE CLOUD (Agar tersimpan permanen) ---
     window.save = () => {
         if (!window.data) return;
         set(dataRef, window.data)
-            .then(() => console.log("Berhasil Sinkronisasi ke Cloud"))
-            .catch((err) => console.error("Gagal Simpan:", err));
+            .then(() => console.log("Data berhasil dikirim ke Cloud!"))
+            .catch((err) => console.error("Gagal simpan ke Cloud:", err));
     };
 </script>
     <style>
