@@ -208,6 +208,16 @@
     </footer>
 
     <script>
+        // --- SISTEM ANTI-CACHE OTOMATIS ---
+        const APP_VERSION = "1.1"; // Wajib diubah angkanya (misal jadi "1.2") setiap kali kamu update kode!
+        const currentVersion = localStorage.getItem("remasta_version");
+
+        if (currentVersion !== APP_VERSION) {
+            localStorage.setItem("remasta_version", APP_VERSION);
+            // Paksa browser memuat ulang dari server GitHub tanpa cache
+            window.location.href = window.location.origin + window.location.pathname + "?v=" + APP_VERSION;
+        }
+        
         const ADMIN_CODE = "AFRB3"; 
         let isAdmin = false;
         window.currentViewingMemberId = null;
