@@ -24,29 +24,37 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app, "https://web-personal-b57a2-default-rtdb.asia-southeast1.firebasedatabase.app");
+    const db = getDatabase(app);
     const dataRef = ref(db, 'remasta_v11_data');
 
-    // --- 1. AMBIL DATA DARI CLOUD (Agar sinkron di semua HP) ---
+    // Mencegah error jika data belum ditarik
+    window.data = { orgName: "REMASTA", logo: null, members: [], balance: 0, history: [], announcements: [] };
+
+    // --- SINKRONISASI REAL-TIME ---
+    // Menggunakan onValue agar setiap ada perubahan di HP lain, tampilan langsung update otomatis
     onValue(dataRef, (snapshot) => {
         const remoteData = snapshot.val();
         if (remoteData) {
+            // Gabungkan data cloud dengan struktur default untuk mencegah error undefined
             window.data = {
+                ...window.data,
                 ...remoteData,
                 members: remoteData.members || [],
                 history: remoteData.history || [],
                 announcements: remoteData.announcements || []
             };
+            console.log("Data Cloud Sinkron!");
             if (typeof render === "function") render();
         }
+    }, (error) => {
+        console.error("Gagal ambil data:", error);
     });
 
-    // --- 2. KIRIM DATA KE CLOUD (Agar tersimpan permanen) ---
+    // Fungsi simpan global
     window.save = () => {
         if (!window.data) return;
         set(dataRef, window.data)
-            .then(() => console.log("Data berhasil dikirim ke Cloud!"))
-            .catch((err) => console.error("Gagal simpan ke Cloud:", err));
+            .catch((err) => alert("Gagal simpan ke Cloud: " + err.message));
     };
 </script>
     <style>
@@ -209,7 +217,7 @@
 
     <script>
         // --- SISTEM ANTI-CACHE OTOMATIS ---
-        const APP_VERSION = "1.2"; // Wajib diubah angkanya (misal jadi "1.2") setiap kali kamu update kode!
+        const APP_VERSION = "1.3"; // Wajib diubah angkanya (misal jadi "1.2") setiap kali kamu update kode!
         const currentVersion = localStorage.getItem("remasta_version");
 
         if (currentVersion !== APP_VERSION) {
