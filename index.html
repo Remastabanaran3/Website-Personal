@@ -67,21 +67,21 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-white p-6 md:p-8 rounded-[2rem] border-l-8 border-green-500 shadow-md card-stat">
                     <div class="flex items-center gap-3 mb-2">
-                        <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center text-lg">💵</div>
+                        <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center text-lg"></div>
                         <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Saldo Kas</p>
                     </div>
                     <p id="stat-balance" class="text-2xl md:text-3xl font-black text-[#1D3557]">Rp 0</p>
                 </div>
                 <div class="bg-white p-6 md:p-8 rounded-[2rem] border-l-8 border-amber-400 shadow-md card-stat">
                     <div class="flex items-center gap-3 mb-2">
-                        <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center text-lg">⚠️</div>
+                        <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center text-lg"></div>
                         <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Tunggakan</p>
                     </div>
                     <p id="stat-receivable" class="text-2xl md:text-3xl font-black text-amber-500">Rp 0</p>
                 </div>
                 <div class="bg-white p-6 md:p-8 rounded-[2rem] border-l-8 border-indigo-500 shadow-md card-stat">
                     <div class="flex items-center gap-3 mb-2">
-                        <div class="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center text-lg">👥</div>
+                        <div class="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center text-lg"></div>
                         <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Anggota</p>
                     </div>
                     <p id="stat-members" class="text-2xl md:text-3xl font-black text-[#1D3557]">0</p>
@@ -90,7 +90,7 @@
 
             <!-- Latest Announcements Preview -->
             <div>
-                <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">📢 Pengumuman Terbaru</h3>
+                <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Pengumuman Terbaru</h3>
                 <div id="home-announcements" class="space-y-3"></div>
             </div>
         </section>
@@ -107,7 +107,7 @@
             </div>
             <!-- Search bar -->
             <div class="relative">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></span>
                 <input id="member-search" type="text" placeholder="Cari nama anggota..." oninput="filterMembers()" class="form-input pl-10">
             </div>
             <div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-xl">
@@ -140,7 +140,7 @@
                     <h2 class="text-2xl md:text-3xl font-black text-[#1D3557] italic uppercase tracking-tighter">Laporan Kas</h2>
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Transparansi Arus Kas</p>
                 </div>
-                <button onclick="chargeAllMembers()" class="admin-only hidden bg-amber-400 text-[#1D3557] px-5 py-3 rounded-2xl text-[11px] font-black shadow-lg uppercase">⚡ Tagih Semua</button>
+                <button onclick="chargeAllMembers()" class="admin-only hidden bg-amber-400 text-[#1D3557] px-5 py-3 rounded-2xl text-[11px] font-black shadow-lg uppercase">Tagih Semua</button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-[#1D3557] p-6 md:p-8 rounded-[2rem] text-white shadow-xl">
@@ -167,7 +167,7 @@
                 <div class="lg:col-span-2 space-y-3">
                     <div class="flex justify-between items-center px-1">
                         <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Riwayat Transaksi</h3>
-                        <button onclick="clearHistory()" class="admin-only hidden text-[9px] font-black text-red-400 uppercase hover:text-red-600">🗑 Hapus Semua</button>
+                        <button onclick="clearHistory()" class="admin-only hidden text-[9px] font-black text-red-400 uppercase hover:text-red-600">Hapus Semua</button>
                     </div>
                     <div id="historyList" class="bg-white/50 rounded-[2rem] p-4 max-h-[500px] overflow-y-auto space-y-2 custom-scroll border border-slate-100"></div>
                 </div>
@@ -338,7 +338,7 @@
                 ? '<p class="text-center py-6 opacity-30 italic text-sm">Belum ada pengumuman</p>'
                 : latest.map(a => `
                     <div class="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex gap-4 items-start">
-                        <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">📢</div>
+                        <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0"></div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-start gap-2">
                                 <p class="font-black uppercase text-[12px] text-[#1D3557] leading-tight">${a.title || '-'}</p>
